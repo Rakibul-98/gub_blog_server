@@ -20,16 +20,16 @@ app.get('/', (req, res) => {
     res.send('Welcome to the Blog API');
 });
 
-// create blog
+// Create blog
 app.post('/create-blog', async (req, res) => {
-    const { title, imageUrl, description, content, author } = req.body;
+    const { title, imageUrl, description, content, author, authorEmail } = req.body;
 
     if (!title || !imageUrl || !description || !content) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
     try {
-        const newBlog = new Blog({ title, imageUrl, description, content, author });
+        const newBlog = new Blog({ title, imageUrl, description, content, author, authorEmail });
         await newBlog.save();
         res.status(201).json(newBlog);
     } catch (err) {
@@ -37,7 +37,7 @@ app.post('/create-blog', async (req, res) => {
     }
 });
 
-// get all blogs
+// Get all blogs
 app.get('/blogs', async (req, res) => {
     try {
         const blogs = await Blog.find();
@@ -48,6 +48,7 @@ app.get('/blogs', async (req, res) => {
     }
 });
 
+// Get a specific blog by ID
 app.get('/blogs/:id', async (req, res) => {
     try {
         const blog = await Blog.findById(req.params.id);
@@ -69,7 +70,58 @@ app.get('/blogs/:id', async (req, res) => {
     }
 });
 
-// signup user
+// Get blogs of a specific user
+app.get('/blogs/user/:userEmail', async (req, res) => {
+    const { userEmail } = req.params;
+
+    try {
+        const blogs = await Blog.find({ authorEmail: userEmail });
+
+        if (blogs.length === 0) {
+            return res.status(404).json({ message: "No blogs found for this user" });
+        }
+
+        res.status(200).json({ blogs });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to fetch blogs for this user" });
+    }
+});
+
+// Update a specific blog by ID
+app.put("/update/:id", async (req, res) => {
+    console.log("Update blog request received:", req.body);
+    console.log("Blog ID:", req.params.id);
+    try {
+        const updated = await Blog.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        });
+        if (!updated) return res.status(404).json({ message: "Blog not found" });
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to update blog" });
+    }
+});
+
+// Delete a specific blog by ID
+app.delete('/blogs/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const blog = await Blog.findById(id);
+
+        if (!blog) {
+            return res.status(404).json({ message: "Blog not found" });
+        }
+        await Blog.findByIdAndDelete(id);
+        res.status(200).json({ message: "Blog deleted successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to delete blog" });
+    }
+});
+
+// Signup user
 app.post('/users/signup', async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -100,7 +152,7 @@ app.post('/users/signup', async (req, res) => {
     }
 });
 
-// login user
+// Login user
 app.post("/users/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -117,7 +169,7 @@ app.post("/users/login", async (req, res) => {
 
         res.status(200).json({
             message: "Login successful",
-            user: { name: user.name, email: user.email },
+            user: { name: user.name, email: user.email, id: user._id },
         });
 
     } catch (error) {
@@ -128,5 +180,5 @@ app.post("/users/login", async (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server running on port the ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

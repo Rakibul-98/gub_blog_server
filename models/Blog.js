@@ -20,6 +20,10 @@ const blogSchema = new mongoose.Schema({
     author: {
         type: String,
         required: true
+    },
+    authorEmail: {
+        type: String,
+        required: true
     }
 }, { timestamps: true });
 
