@@ -22,14 +22,14 @@ app.get('/', (req, res) => {
 
 // Create blog
 app.post('/create-blog', async (req, res) => {
-    const { title, imageUrl, description, content, author, authorEmail } = req.body;
+    const { title, imageUrl, description, content, author, authorEmail, category } = req.body;
 
     if (!title || !imageUrl || !description || !content) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
     try {
-        const newBlog = new Blog({ title, imageUrl, description, content, author, authorEmail });
+        const newBlog = new Blog({ title, imageUrl, description, content, author, authorEmail, category });
         await newBlog.save();
         res.status(201).json(newBlog);
     } catch (err) {
